@@ -6,10 +6,7 @@ import numbers
 
 from einops import rearrange
 
-
-
-##########################################################################
-## Layer Norm
+#모델
 
 def to_3d(x):
     return rearrange(x, 'b c h w -> b (h w) c')
@@ -64,10 +61,7 @@ class LayerNorm(nn.Module):
         h, w = x.shape[-2:]
         return to_4d(self.body(to_3d(x)), h, w)
 
-
-
-##########################################################################
-## Gated-Dconv Feed-Forward Network (GDFN)
+##GDFN
 class FeedForward(nn.Module):
     def __init__(self, dim, ffn_expansion_factor, bias):
         super(FeedForward, self).__init__()
@@ -87,10 +81,7 @@ class FeedForward(nn.Module):
         x = self.project_out(x)
         return x
 
-
-
-##########################################################################
-## Multi-DConv Head Transposed Self-Attention (MDTA)
+##MDTA
 class Attention(nn.Module):
     def __init__(self, channels, num_heads, bias):
         super(Attention, self).__init__()
@@ -115,9 +106,6 @@ class Attention(nn.Module):
         out = self.project_out(torch.matmul(attn, v).reshape(b, -1, h, w))
         return out
 
-
-
-##########################################################################
 class TransformerBlock(nn.Module):
     def __init__(self, dim, num_heads, ffn_expansion_factor, bias, LayerNorm_type):
         super(TransformerBlock, self).__init__()
@@ -298,11 +286,10 @@ class Restormer(nn.Module):
 
         out_dec_level1 = self.refinement(out_dec_level1)
 
-        #### For Dual-Pixel Defocus Deblurring Task ####
         if self.dual_pixel_task:
             out_dec_level1 = out_dec_level1 + self.skip_conv(inp_enc_level1)
             out_dec_level1 = self.output(out_dec_level1)
-        ###########################
+            
         else:
             out_dec_level1 = self.output(out_dec_level1) + inp_img
 
