@@ -6,10 +6,7 @@ import numbers
 
 from einops import rearrange
 
-
-
-##########################################################################
-## Layer Norm
+#모델
 
 def to_3d(x):
     return rearrange(x, 'b c h w -> b (h w) c')
@@ -65,9 +62,7 @@ class LayerNorm(nn.Module):
         return to_4d(self.body(to_3d(x)), h, w)
 
 
-
-##########################################################################
-## Gated-Dconv Feed-Forward Network (GDFN)
+##GDFN
 class FeedForward(nn.Module):
     def __init__(self, dim, ffn_expansion_factor, bias):
         super(FeedForward, self).__init__()
@@ -87,10 +82,7 @@ class FeedForward(nn.Module):
         x = self.project_out(x)
         return x
 
-
-
-##########################################################################
-## Multi-DConv Head Transposed Self-Attention (MDTA)
+##MDTA
 class Attention(nn.Module):
     def __init__(self, channels, num_heads, bias):
         super(Attention, self).__init__()
@@ -116,8 +108,6 @@ class Attention(nn.Module):
         return out
 
 
-
-##########################################################################
 class TransformerBlock(nn.Module):
     def __init__(self, dim, num_heads, ffn_expansion_factor, bias, LayerNorm_type):
         super(TransformerBlock, self).__init__()
@@ -133,10 +123,6 @@ class TransformerBlock(nn.Module):
 
         return x
 
-
-
-##########################################################################
-## Overlapped image patch embedding with 3x3 Conv
 class OverlapPatchEmbed(nn.Module):
     def __init__(self, in_c=3, embed_dim=48, bias=False):
         super(OverlapPatchEmbed, self).__init__()
@@ -149,9 +135,6 @@ class OverlapPatchEmbed(nn.Module):
         return x
 
 
-
-##########################################################################
-## Resizing modules
 class Downsample(nn.Module):
     def __init__(self, n_feat):
         super(Downsample, self).__init__()
@@ -172,8 +155,6 @@ class Upsample(nn.Module):
     def forward(self, x):
         return self.body(x)
 
-##########################################################################
-##---------- Restormer -----------------------
 class Restormer(nn.Module):
     def __init__(self,
         inp_channels=3,
@@ -298,11 +279,10 @@ class Restormer(nn.Module):
 
         out_dec_level1 = self.refinement(out_dec_level1)
 
-        #### For Dual-Pixel Defocus Deblurring Task ####
         if self.dual_pixel_task:
             out_dec_level1 = out_dec_level1 + self.skip_conv(inp_enc_level1)
             out_dec_level1 = self.output(out_dec_level1)
-        ###########################
+
         else:
             out_dec_level1 = self.output(out_dec_level1) + inp_img
 
